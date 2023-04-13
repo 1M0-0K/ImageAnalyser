@@ -24,7 +24,7 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
 ## Usage
 To use this application you need to host it on a server (localhost will do if you want to use it locally).
 
-After to enter the app you will be welcomed by this page:
+After you enter the app you will be welcomed by this page:
 
 ![Application Welcome Screen](/screenshots/screenshot0.png)
 
@@ -36,7 +36,7 @@ To add a file you can drop or paste directly on the application or click the fil
 - Dark Mode
 ![Application Dark Mode](/screenshots/screenshot2.png)
 
-Here you can add images from an URL or selecting one from your machine by clicking the file icon (local image has higher priority). After selecting an image or inserting an URL press the "Display" button.
+Here you can add images from an URL or select one from your machine by clicking the file icon (local image has higher priority). After selecting an image or inserting an URL press the "Display" button.
 
 ![Application Preview](/screenshots/screenshot1.png)
 
