@@ -1,0 +1,30 @@
+{
+	"name": "Image Analyser",
+	"short_name": "Analyser",
+	"start_url": "/index.html",
+	"id": "/index.html",
+	"display": "standalone",
+	"orientation": "portrait-primary",
+	"background_color": "#e5e5e5",
+	"theme_color": "#e5e5e5",
+	"scope": "/",
+	"description": "A simple image analyser.",
+	"icons": [
+		{
+			"src": "img/favicon.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		},
+		{
+			"src": "img/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		},
+		{
+			"src": "img/mask-icon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}
