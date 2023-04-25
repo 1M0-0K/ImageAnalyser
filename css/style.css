@@ -8,6 +8,8 @@
 	text-decoration: none;
 	box-sizing: border-box;
 	outline-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	-moz-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 *{
@@ -270,7 +272,7 @@ body{
 	border-radius: 10px;
 	cursor: initial;
 	color: var(--text-activ);
-	box-shadow: 0 0 10px 1px hsl(0, 0%, 80%);
+	box-shadow: 0 0 10px rgb(0, 0, 0, 0.3);
 }
 
 .close{
