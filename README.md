@@ -15,7 +15,7 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
   * [ ] full touch support
   * [ ] buttons for all tools (move, zoom, measure etc.)
   * [ ] color picker
-  * [ ] color paletter
+  * [ ] color palette
 - Remove:
   * [ ] unused code
 - Fix:
