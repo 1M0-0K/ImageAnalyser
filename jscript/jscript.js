@@ -186,8 +186,10 @@
     const updateFileName = (e) => {
     
 	const file = e.target.files[0];
+	const fileElements = file.name.split(".");
+	    
 	if(file){
-	    selectedImageName.textContent = file.name;
+	    selectedImageName.textContent = fileElements[0].substring(0,28)+"."+fileElements[1];
 	}else{
 	    selectedImageName.textContent = "No Image";
 	}
