@@ -35,6 +35,8 @@
 
     //------Touch
     const eventsDD = ["dragenter", "dragover", "dragleave", "drop"];
+    let touchCount = 0;
+    let touchTimeout = null;
 
     //------Guids
     const gVertical = document.createElement("div");
@@ -189,7 +191,7 @@
 	const fileElements = file.name.split(".");
 	    
 	if(file){
-	    selectedImageName.textContent = fileElements[0].substring(0,28)+"."+fileElements[1];
+	    selectedImageName.textContent = fileElements[0].substring(0,28)+"."+fileElements[fileElements.length-1];
 	}else{
 	    selectedImageName.textContent = "No Image";
 	}
@@ -337,7 +339,7 @@
 
     //------Moving Tool
 
-    const move  = (e) => {
+    const move = (e) => {
 
 	//Update the image position
 	workImage.style.left = `${e.clientX - offsetX}px`; 
@@ -423,8 +425,6 @@
 		else{
 		    if(zoom<1000)zoom += 5;
 		}
-	    }else if(e.deltaY == 0){
-		console.log("test");
 	    }
 
 	    //Update the image
@@ -596,18 +596,33 @@
     const mToolMouseDownTouch = (e) => {
 
 	e.preventDefault();
+	    
+	if(touchTimeout !== null){
+	    clearTimeout(touchTimeout);
+	}
+
+	touchCount++;
+
 	const touches = e.changedTouches;
 
 	//Check if we can use the tool
-	if(canWork && canMove ===false){
+	if(canWork){ 
 	    //Start using the tool
-	    mToolIsDrawing = true;
-	    mToolX2 = touches[0].clientX;
-	    mToolY2 = touches[0].clientY;
-	    mToolX1 = touches[0].clientX;
-	    mToolY1 = touches[0].clientY;
-	    mTool.style.display = "block";
-	    mToolDraw();
+	    if(touchCount === 1){
+		lastCursorStyle = main.style.cursor;
+		main.style.cursor= "grabbing";
+		offsetX = touches[0].clientX - workImage.offsetLeft;
+		offsetY = touches[0].clientY - workImage.offsetTop;
+		canMove = true;
+	    }else if(touchCount === 2){
+		mToolIsDrawing = true;
+		mToolX2 = touches[0].clientX;
+		mToolY2 = touches[0].clientY;
+		mToolX1 = touches[0].clientX;
+		mToolY1 = touches[0].clientY;
+		mTool.style.display = "block";
+		mToolDraw();
+	    }
 	}
     }
 
@@ -615,10 +630,21 @@
 	
 	e.preventDefault();
 
-	//The tool is stopped
-	mToolIsDrawing = false;
-	mTool.style.display = "none";
+	touchTimeout = setTimeout(() => {
+	    touchCount = 0;
+	}, 100);
 
+
+	if(canMove){
+	    main.style.cursor = lastCursorStyle;
+	    canMove = false;
+	}
+
+	if(mToolIsDrawing){
+	    //The tool is stopped
+	    mToolIsDrawing = false;
+	    mTool.style.display = "none";
+	}
     }
 
     const mToolMouseMoveTouch = (e) => {
@@ -626,15 +652,20 @@
 	e.preventDefault();
 
 	const touches = e.changedTouches;
-	
-	//Update the postion of the tool
-	mToolX2 = touches[0].clientX;
-	mToolY2 = touches[0].clientY;
-	
-	//Check if we can use the tool
-	if(mToolIsDrawing === true && canMove === false)
-	    mToolDraw();
 
+	if(canMove === true){
+	    move(touches[0]);    
+	    updateGuids();
+	}
+	if(mToolIsDrawing){
+	    //Update the postion of the tool
+	    mToolX2 = touches[0].clientX;
+	    mToolY2 = touches[0].clientY;
+	    
+	    //Check if we can use the tool
+	    if(mToolIsDrawing === true && canMove === false)
+		mToolDraw();
+	}
     }
 
     ////////////////////////////////
