@@ -10,6 +10,11 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
 - Dark/Light mode
 - Drop/Paste image upload
 
+## Technology
+- HTML
+- CSS
+- JavaScript
+
 ## TODO
 - Add: 
   * [ ] full touch support
