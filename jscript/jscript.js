@@ -23,6 +23,8 @@
     //------Workspace
     const main = document.querySelector("#main");
     const workImage = document.querySelector("#main>img");
+    const canvas = document.querySelector("#canvas");
+    const ctx = canvas.getContext("2d");
 
     //------Image 
     const formAdd = document.querySelector("#add-file");
@@ -37,7 +39,6 @@
     const eventsDD = ["dragenter", "dragover", "dragleave", "drop"];
     let touchCount = 0;
     let touchTimeout = null;
-    let touchTime = [0, 0];
     let touchPoints = [];
     let prevDifference = -1;
 
@@ -48,13 +49,18 @@
     //------Zooming Tool
     let zoomToolLabel= document.createElement("div"); 
     let zoom = 100;
+    let zoomTemp = zoom;
     let timer = null;
     let zoomToolTouchOn = false;
 
     //------Moving Tool
     let canMove = false;
-    let offsetX = 0;
-    let offsetY = 0;
+    let imageX = 0;
+    let imageY = 0;
+    let imageOffsetX = 0;
+    let imageOffsetY = 0;
+    let imageOffsetLeft = 0;
+    let imageOffsetTop = 0;
 
 
     //------Measure Tool
@@ -77,6 +83,25 @@
     const preventDefaults = (e) => {
 	e.preventDefault();
 	e.stopPropagation();
+    }
+    
+    const canvasInit = () => {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	// ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
+    }
+
+    const drawCanvas = () => {
+	
+	ctx.clearRect(0, 0, innerWidth, innerHeight);
+	// imageOffsetLeft = (window.innerWidth/2 - workImage.width/2);
+	// imageOffsetTop = (window.innerHeight/2 - workImage.height/2);
+	// let elementScale = measuredElement.getBoundingClientRect().width / measuredElement.offsetWidth;
+	// ctx.scale((zoom/100), (zoom/100));
+	ctx.drawImage(workImage, imageX, imageY, workImage.width*(zoom/100), workImage.height*(zoom/100));
+	// ctx.drawImage(workImage, 0, 0);
+	requestAnimationFrame(drawCanvas);
+
     }
     
     const isImageExtension = (name) => {
@@ -176,11 +201,17 @@
 
 	//Update the style of some elements
 	dragDrop.style.display = "none";
-	workImage.style.display = "block";
-	workImage.style.left = "";
-	workImage.style.top = "";
+	// workImage.style.display = "block";
+	canvas.style.display = "block";
 	main.style.cursor = "crosshair";	
+
+	imageOffsetLeft = (window.innerWidth / 2 - workImage.width / 2 );
+	imageOffsetTop = Math.ceil(window.innerHeight / 2 - workImage.height / 2);
+	imageX = imageOffsetLeft;
+	imageY = imageOffsetTop;
 	
+	drawCanvas();
+	//
 	//Now we can use the tools
 	canWork = true;
 
@@ -323,17 +354,13 @@
 
     const updateGuids = () => {
 
-	//Find the scale for the zoom magnification
-	let measuredElement = document.querySelector("#main>img");
-	let elementScale = measuredElement.getBoundingClientRect().width / measuredElement.offsetWidth;
-
 	//Update the width and height of the guids for the current image
-	gVertical.style.width = Math.abs(workImage.offsetWidth * elementScale) + "px";
-	gHorizontal.style.height = Math.abs(workImage.offsetHeight * elementScale) + "px";
+	gVertical.style.width = Math.abs(workImage.width * zoom / 100) + "px";
+	gHorizontal.style.height = Math.abs(workImage.height * zoom /100) + "px";
 
 	//Update the position of the guids for the current image
-	gVertical.style.left = (workImage.offsetLeft - ((workImage.getBoundingClientRect().width - workImage.offsetWidth) / 2)) + "px";
-	gHorizontal.style.top = (workImage.offsetTop - ((workImage.getBoundingClientRect().height - workImage.offsetHeight) / 2))+ "px"; 
+	gVertical.style.left = imageOffsetLeft + "px";
+	gHorizontal.style.top = imageOffsetTop + "px"; 
 	
 	//Display the guids on the page
 	gVertical.style.display = "block";
@@ -346,21 +373,32 @@
     const move = (e) => {
 
 	//Update the image position
-	workImage.style.left = `${e.clientX - offsetX}px`; 
-	workImage.style.top = `${e.clientY - offsetY}px`; 
+	imageX = e.clientX - imageOffsetX;
+	imageY = e.clientY - imageOffsetY;
+	imageOffsetLeft = imageX;
+	imageOffsetTop = imageY;
 
     } 
     
     const movingTool = (e) => {
+	let posX = e.clientX;
+	let posY = e.clientY;
+
+	if(e.targetTouches){
+	    posX = e.touches[0].clientX; 
+	    posY = e.touches[0].clientY;
+	}
 
 	//If the wheel or the left mouse button and alt key are pressed and we can
 	//use the tool we start moving the image
-	if(e.button === 1 || (e.button === 0 && e.altKey)){
+	if(e.button === 1 || (e.button === 0 && e.altKey) || (e.touches && e.touches[0])){
 	    if(canWork){
 		lastCursorStyle = main.style.cursor;
 		main.style.cursor= "grabbing";
-		offsetX = e.clientX - workImage.offsetLeft;
-		offsetY = e.clientY - workImage.offsetTop;
+
+		imageOffsetX = posX - imageOffsetLeft;
+		imageOffsetY = posY - imageOffsetTop;
+
 		canMove = true;
 	    }
 	};
@@ -370,7 +408,7 @@
     const movingToolStop = (e) => {
 
 	//The moving stops if the wheel or the left mouse button are not pressed 
-	if(e.button === 1 || (e.button === 0) ){
+	if(e.button === 1 || (e.button === 0) || !e.touches){
 	    if(canMove)
 		main.style.cursor = lastCursorStyle;
 
@@ -380,10 +418,14 @@
     }
 
     const movingToolUpdate = (e) => {
+	let event = e;
+	if(e.touches){
+	    event = e.touches[0];
+	}
 
 	//The image is moved and the guids are updated if we are still moving
 	if(canMove === true){
-	    move(e);    
+	    move(event);    
 	    updateGuids();
 	}
 
@@ -413,6 +455,7 @@
 	if(canWork){
 
 	    //Check if wheel spins up or down
+	
 	    if(e.deltaY > 0){
 		
 		//If alt key is pressed we change the amount only by 1
@@ -422,17 +465,26 @@
 		else{
 		    if(zoom>5)zoom -= 5;
 		}
+		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
+		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
+
 	    }else if(e.deltaY < 0){
+
 		if(e.altKey){
 		    if(zoom<1000)zoom++;
 		}
 		else{
 		    if(zoom<1000)zoom += 5;
 		}
-	    }
+		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
+		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
 
-	    //Update the image
-	    workImage.style.transform = "scale("+(zoom/100)+")";
+	    }
+	    
+	    //Update image position
+	    imageOffsetLeft = imageX;
+	    imageOffsetTop = imageY;
+	    zoomTemp = zoom;
 
 	    //Update magnification label
 
@@ -460,19 +512,28 @@
 	if(canWork){
 
 	    //Check if wheel spins up or down
+	
 	    if(range > 0){
 		if(zoom>100)zoom-=5;
 		else if(zoom>1)zoom--;
 
+		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
+		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
+
 	    }else if(range < 0){
-		
-		if(zoom<100)zoom+=0.5;
+
+		if(zoom<100)zoom+=1;
 		else if(zoom<1000)zoom+=5;
 
-	    }
+		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
+		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
 
-	    //Update the image
-	    workImage.style.transform = "scale("+(zoom/100)+")";
+	    }
+	    
+	    //Update image position
+	    imageOffsetLeft = imageX;
+	    imageOffsetTop = imageY;
+	    zoomTemp = zoom;
 
 	    //Update magnification label
 
@@ -486,10 +547,56 @@
 		zoomToolLabel.style.opacity = "0";
 	    }, 1000);
 
-	    zoomToolLabel.innerHTML = `<p>${Math.round(zoom)}%</p>`;
+	    zoomToolLabel.innerHTML = `<p>${zoom}%</p>`;
 
 	    //Update the guids with the new image properties
 	    updateGuids();
+	}
+
+    }
+
+    const zoomToolTouchDown = (e) => {
+
+	const touchesAtOnce = e.touches;
+	if(e.touches.length === 2){
+	    canMove = false;
+	    zoomToolTouchOn = true;
+	    prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
+	    
+	    for(let i = 0; i < touchesAtOnce.length; i++){
+		touchPoints.push(touchesAtOnce[i]);
+	    }
+	}
+
+    }
+
+    const zoomToolTouchUp = () => {
+
+	if(zoomToolTouchOn){
+	    zoomToolTouchOn = false;
+	    touchPoints = [];
+	    prevDifference = -1;
+	}
+
+    }
+
+    const zoomToolTouchMove = (e) => {
+
+	const touchesAtOnce = e.touches;
+
+	if(zoomToolTouchOn){
+	    if(touchPoints.length === 2){
+		let currDiff = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
+
+		if(currDiff > prevDifference){
+		    zoomToolTouch(-1);
+		}
+		if(currDiff < prevDifference){
+		    zoomToolTouch(1);
+		}
+		prevDifference = currDiff;
+
+	    }
 	}
 
     }
@@ -535,11 +642,6 @@
 	//Initiate the size label
 	mToolSizeLabelInit();
 
-	//Add events to the tool
-	mTool.addEventListener("mousedown", mToolMouseDown, false);
-	mTool.addEventListener("mouseup", mToolMouseUp, false);
-	mTool.addEventListener("mousemove", mToolMouseMove, false);
-
     }
 
     const mToolSizeLabelInit = () => {
@@ -557,8 +659,7 @@
 	    return false;
 	
 	//Find the scale for the zoom magnification
-	let measuredElement = document.querySelector("#main>img");
-	let elementScale = measuredElement.getBoundingClientRect().width / measuredElement.offsetWidth;
+	let elementScale = workImage.width / workImage.width*zoom/100;
 
 	const width = Math.round(Math.abs(mToolX2 - mToolX1));
 	const height = Math.round(Math.abs(mToolY2 - mToolY1));
@@ -598,17 +699,24 @@
     }
 
     const mToolMouseDown = (e) => {
+	let posX = e.clientX;
+	let posY = e.clientY;
+
+	if(e.targetTouches){
+	    posX = e.touches[0].clientX; 
+	    posY = e.touches[0].clientY;
+	}
 
 	e.preventDefault();
 
 	//Check if we can use the tool
-	if(e.button === 0 && canWork && canMove === false && !e.altKey){
+	if(e.button === 0 && canWork && canMove === false && !e.altKey || e.touches){
 	    mToolIsDrawing = true;
 
-	    mToolX2 = e.clientX;
-	    mToolY2 = e.clientY;
-	    mToolX1 = e.clientX;
-	    mToolY1 = e.clientY;
+	    mToolX2 = posX;
+	    mToolY2 = posY;
+	    mToolX1 = posX;
+	    mToolY1 = posY;
 
 	    mTool.style.display = "block";
 
@@ -626,10 +734,17 @@
     }
 
     const mToolMouseMove = (e) => {
+	let posX = e.clientX;
+	let posY = e.clientY;
+
+	if(e.targetTouches){
+	    posX = e.touches[0].clientX; 
+	    posY = e.touches[0].clientY;
+	}
 	
 	//Update the position of the tool
-	mToolX2 = e.clientX;
-	mToolY2 = e.clientY;
+	mToolX2 = posX;
+	mToolY2 = posY;
 	
 	//Check if we can use the tool
 	if(mToolIsDrawing === true && canMove === false)
@@ -637,119 +752,27 @@
     }
 
     /* For Touch */
-    const mToolMouseDownTouch = (e) => {
 
-	e.preventDefault();
-	    
+    const mToolTouchDown = (e) => {
+
 	if(touchTimeout !== null){
 	    clearTimeout(touchTimeout);
 	}
-
-	const touchesAtOnce = e.targetTouches;
-
 	touchCount++;
-	touchTime[touchCount - 1] = Date.now();
-
-	const touches = e.changedTouches;
-
-	//Check if we can use the tool
-	if(canWork){ 
-	    //Start using the tool
-	    if(touchesAtOnce.length < 2){
-		if(touchCount === 1 && !canMove){
-		    lastCursorStyle = main.style.cursor;
-		    main.style.cursor= "grabbing";
-		    offsetX = touches[0].clientX - workImage.offsetLeft;
-		    offsetY = touches[0].clientY - workImage.offsetTop;
-		    canMove = true;
-		}else if(touchCount === 2){
-		    if(touchTime[0] + 100 < touchTime[1] && !canMove){
-			mToolIsDrawing = true;
-			mToolX2 = touches[0].clientX;
-			mToolY2 = touches[0].clientY;
-			mToolX1 = touches[0].clientX;
-			mToolY1 = touches[0].clientY;
-			mTool.style.display = "block";
-			mToolDraw();
-		    }
-		}
-	    }else{
-		canMove = false;
-		zoomToolTouchOn = true;
-		prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
-		
-		for(let i = 0; i < touchesAtOnce.length; i++){
-		    touchPoints.push(touchesAtOnce[i]);
-		}
-
-	    }
-
+	if(touchCount == 2 && e.touches.length < 2){
+	    canMove = false;
+	    mToolMouseDown(e);
 	}
+
     }
 
-    const mToolMouseUpTouch = (e) => {
-	
-	e.preventDefault();
+    const mToolTouchUp = (e) => {
 
 	touchTimeout = setTimeout(() => {
 	    touchCount = 0;
 	}, 100);
 
-
-	if(canMove){
-	    main.style.cursor = lastCursorStyle;
-	    canMove = false;
-	}
-
-	if(mToolIsDrawing){
-	    //The tool is stopped
-	    mToolIsDrawing = false;
-	    mTool.style.display = "none";
-	}
-	
-	if(zoomToolTouchOn){
-	    zoomToolTouchOn = false;
-	    touchPoints = [];
-	    prevDifference = -1;
-	}
-
-    }
-
-    const mToolMouseMoveTouch = (e) => {
-
-	e.preventDefault();
-
-	const touches = e.changedTouches;
-	const touchesAtOnce = e.targetTouches;
-
-	if(canMove === true){
-	    move(touches[0]);    
-	    updateGuids();
-	}
-	if(mToolIsDrawing){
-	    //Update the postion of the tool
-	    mToolX2 = touches[0].clientX;
-	    mToolY2 = touches[0].clientY;
-	    
-	    //Check if we can use the tool
-	    if(mToolIsDrawing === true && canMove === false)
-		mToolDraw();
-	}
-	
-	if(zoomToolTouchOn){
-	    if(touchPoints.length === 2){
-		let currDiff = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
-
-		if(currDiff > prevDifference){
-		    zoomToolTouch(-1);
-		}
-		if(currDiff < prevDifference){
-		    zoomToolTouch(1);
-		}
-		prevDifference = currDiff;
-
-	    }
-	}
+	mToolMouseUp(e);
 
     }
 
@@ -760,9 +783,6 @@
     //Add event for when mouse buttons are pressed
     addEventListener("mousedown",(e) => {
 
-	//Moving tool
-	movingTool(e);
-
 	//Buttons 
 	buttonsEvents(e);
 
@@ -770,28 +790,7 @@
 
     //Add event for when mouse buttons are released
     addEventListener("mouseup", (e) => {
-
-	//Moving tool
-	movingToolStop(e);
-
-    })
-    
-    //Add event for moving mouse
-    addEventListener("mousemove", (e) => {
-
-	//Moving tool
-	movingToolUpdate(e);
-
-	//Zoom label update
-	zoomToolLabelUpdate(e);
-
-    })
-
-    //Add event for wheel moves
-    addEventListener("wheel", (e) => { 
-
-	//Zoom tool
-	zoomTool(e);
+	//Nothing for now
 
     })
 
@@ -861,24 +860,116 @@
 
     })
 
-    
-    //Add events for moving tool
-    main.addEventListener("mousedown", mToolMouseDown, false);
-    main.addEventListener("mouseup", mToolMouseUp, false);
-    main.addEventListener("mousemove", mToolMouseMove, false);
+    //Add event for mouse down
+    main.addEventListener("mousedown",(e) =>{
 
+	//Moving tool
+	movingTool(e);
+
+	//Measure Tool
+	mToolMouseDown(e);
+
+    }, false);
+
+    //Add event for mouse up
+    main.addEventListener("mouseup",(e) =>{
+	//Moving tool
+	movingToolStop(e);
+
+	//Measure tool
+	mToolMouseUp(e);
+
+    } , false);
+
+    //Add event for mouse moving
+    main.addEventListener("mousemove",(e) => { 
+	//Moving tool
+	movingToolUpdate(e);
+
+	//Zoom label update
+	zoomToolLabelUpdate(e);
+
+	//Measure tool
+	mToolMouseMove(e);
+
+    }, false);
+
+    //Add event for wheel moves
+    main.addEventListener("wheel", (e) => { 
+
+	//Zoom tool
+	zoomTool(e);
+
+    })
+
+    //TODO: Refactoring
     //Add events to touch
-    main.addEventListener("touchstart",mToolMouseDownTouch,false);
-    main.addEventListener("touchend",mToolMouseUpTouch,false);
-    main.addEventListener("touchcancel",mToolMouseUpTouch,false);
-    main.addEventListener("touchmove",mToolMouseMoveTouch,false);
+    main.addEventListener("touchstart",(e) => {
+	e.preventDefault();
+
+	//Moving tool
+	movingTool(e);
+
+	//Measure tool
+	mToolTouchDown(e);
+
+	//Zoom tool
+	zoomToolTouchDown(e);
+	// mToolMouseDownTouch(e);
+    },false);
+
+    main.addEventListener("touchend",(e) => {
+	e.preventDefault();
+	
+	//Moving tool
+	movingToolStop(e);
+
+	//Measure tool
+	mToolTouchUp(e);
+
+	//Zoom tool
+	zoomToolTouchUp();
+	// mToolMouseUpTouch(e);
+    },false);
+
+    main.addEventListener("touchcancel",(e) => {
+	e.preventDefault();
+
+	//Moving tool 
+	movingToolStop(e);
+
+	//Measure tool
+	mToolTouchUp(e);
+
+	//Zoom tool
+	zoomToolTouchUp();
+	// mToolMouseUpTouch(e);
+    },false);
+
+    main.addEventListener("touchmove",(e) => {
+	e.preventDefault();
+
+	//Moving tool
+	movingToolUpdate(e);
+
+	//Measure tool
+	mToolMouseMove(e);
+
+	//Zoom tool
+	zoomToolTouchMove(e);
+	// mToolMouseMoveTouch(e);
+    },false);
+
+    window.addEventListener("resize", () => {
+	canvasInit();
+
+    })
 
     //Initialize 
     setTheme();
+    canvasInit();
     mToolInit();
     guids();
     zoomToolLabelInit();
 
 })(window, document);
-
-
