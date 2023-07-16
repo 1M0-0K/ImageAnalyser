@@ -225,6 +225,7 @@ body{
 	padding: 3px 5px;
 	text-shadow: 0 1px 1px rgba(6, 6, 6, 1);
 	transition: opacity 0.15s linear;
+	top: calc(100% - 40px);
 	opacity: 0;
 }
 
