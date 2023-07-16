@@ -37,6 +37,9 @@
     const eventsDD = ["dragenter", "dragover", "dragleave", "drop"];
     let touchCount = 0;
     let touchTimeout = null;
+    let touchTime = [0, 0];
+    let touchPoints = [];
+    let prevDifference = -1;
 
     //------Guids
     const gVertical = document.createElement("div");
@@ -46,6 +49,7 @@
     let zoomToolLabel= document.createElement("div"); 
     let zoom = 100;
     let timer = null;
+    let zoomToolTouchOn = false;
 
     //------Moving Tool
     let canMove = false;
@@ -447,9 +451,49 @@
 	    //Update the guids with the new image properties
 	    updateGuids();
 	}
-	
 
     }
+
+    const zoomToolTouch = (range) => {//display the zoom in top right corner in a small pill like box
+
+	//Check if we cand use the tool
+	if(canWork){
+
+	    //Check if wheel spins up or down
+	    if(range > 0){
+		if(zoom>100)zoom-=5;
+		else if(zoom>1)zoom--;
+
+	    }else if(range < 0){
+		
+		if(zoom<100)zoom+=0.5;
+		else if(zoom<1000)zoom+=5;
+
+	    }
+
+	    //Update the image
+	    workImage.style.transform = "scale("+(zoom/100)+")";
+
+	    //Update magnification label
+
+	    zoomToolLabel.style.opacity = "1";
+	    
+	    if(timer !== null){
+		clearTimeout(timer);;
+	    }
+
+	    timer = setTimeout(() => {
+		zoomToolLabel.style.opacity = "0";
+	    }, 1000);
+
+	    zoomToolLabel.innerHTML = `<p>${Math.round(zoom)}%</p>`;
+
+	    //Update the guids with the new image properties
+	    updateGuids();
+	}
+
+    }
+
 
     //------Buttons Events
     const buttonsEvents = (e) => {
@@ -601,28 +645,45 @@
 	    clearTimeout(touchTimeout);
 	}
 
+	const touchesAtOnce = e.targetTouches;
+
 	touchCount++;
+	touchTime[touchCount - 1] = Date.now();
 
 	const touches = e.changedTouches;
 
 	//Check if we can use the tool
 	if(canWork){ 
 	    //Start using the tool
-	    if(touchCount === 1){
-		lastCursorStyle = main.style.cursor;
-		main.style.cursor= "grabbing";
-		offsetX = touches[0].clientX - workImage.offsetLeft;
-		offsetY = touches[0].clientY - workImage.offsetTop;
-		canMove = true;
-	    }else if(touchCount === 2){
-		mToolIsDrawing = true;
-		mToolX2 = touches[0].clientX;
-		mToolY2 = touches[0].clientY;
-		mToolX1 = touches[0].clientX;
-		mToolY1 = touches[0].clientY;
-		mTool.style.display = "block";
-		mToolDraw();
+	    if(touchesAtOnce.length < 2){
+		if(touchCount === 1 && !canMove){
+		    lastCursorStyle = main.style.cursor;
+		    main.style.cursor= "grabbing";
+		    offsetX = touches[0].clientX - workImage.offsetLeft;
+		    offsetY = touches[0].clientY - workImage.offsetTop;
+		    canMove = true;
+		}else if(touchCount === 2){
+		    if(touchTime[0] + 100 < touchTime[1] && !canMove){
+			mToolIsDrawing = true;
+			mToolX2 = touches[0].clientX;
+			mToolY2 = touches[0].clientY;
+			mToolX1 = touches[0].clientX;
+			mToolY1 = touches[0].clientY;
+			mTool.style.display = "block";
+			mToolDraw();
+		    }
+		}
+	    }else{
+		canMove = false;
+		zoomToolTouchOn = true;
+		prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
+		
+		for(let i = 0; i < touchesAtOnce.length; i++){
+		    touchPoints.push(touchesAtOnce[i]);
+		}
+
 	    }
+
 	}
     }
 
@@ -645,6 +706,13 @@
 	    mToolIsDrawing = false;
 	    mTool.style.display = "none";
 	}
+	
+	if(zoomToolTouchOn){
+	    zoomToolTouchOn = false;
+	    touchPoints = [];
+	    prevDifference = -1;
+	}
+
     }
 
     const mToolMouseMoveTouch = (e) => {
@@ -652,6 +720,7 @@
 	e.preventDefault();
 
 	const touches = e.changedTouches;
+	const touchesAtOnce = e.targetTouches;
 
 	if(canMove === true){
 	    move(touches[0]);    
@@ -666,6 +735,22 @@
 	    if(mToolIsDrawing === true && canMove === false)
 		mToolDraw();
 	}
+	
+	if(zoomToolTouchOn){
+	    if(touchPoints.length === 2){
+		let currDiff = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
+
+		if(currDiff > prevDifference){
+		    zoomToolTouch(-1);
+		}
+		if(currDiff < prevDifference){
+		    zoomToolTouch(1);
+		}
+		prevDifference = currDiff;
+
+	    }
+	}
+
     }
 
     ////////////////////////////////
@@ -782,7 +867,7 @@
     main.addEventListener("mouseup", mToolMouseUp, false);
     main.addEventListener("mousemove", mToolMouseMove, false);
 
-    //to touch too
+    //Add events to touch
     main.addEventListener("touchstart",mToolMouseDownTouch,false);
     main.addEventListener("touchend",mToolMouseUpTouch,false);
     main.addEventListener("touchcancel",mToolMouseUpTouch,false);
