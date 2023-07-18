@@ -206,7 +206,7 @@ body{
 	align-items: center;
 }
 
-#main>img{
+#main>img,
 #main>canvas{
 	position: absolute;
 	transform-origin: center;
