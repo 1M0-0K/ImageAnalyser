@@ -34,7 +34,6 @@ body{
 	width: 60px;
 	height: 30px;
 	display:block;
-	/* border: 1px solid rgb(48, 50, 54); */
 	border-radius: 30px;
 	background-color: rgb(252, 251, 252);
 	transition: all 0.1s  linear;
@@ -127,36 +126,112 @@ body{
 
 /*ToolBar*/
 #menu{
-	min-width: 40px;
+	width: auto;
 	height: 40px;
 	position: fixed;
 	z-index: 9999;
 	left: 10px;
 	top: 10px;
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	background-color: var(--background-ui);
-	border-radius: 50%;
-	padding: 5px;
-	transition: all 0.1s linear; 
+	transform: translateX(-102%);
+	transition: all 0.2s linear;
 }
 
-#menu:hover{
+#menu::before,
+#menu::after{
+	content: "";
+	position: absolute;
+	cursor: pointer;
+}
+
+#menu::after{
+	width: 26px;
+	height: 26px;
+	right: -30px;
+	background-color: transparent;
+	border: 8px solid transparent;
+	border-top-color: var(--background-ui);
+	border-right-color: var(--background-ui);
+	transform: rotate(45deg);
+	border-radius: 4px;
+}
+
+#menu.active{
+	transform: translateX(0);
+	transform: translateY(0);
+}
+
+#menu.active::after{
+	border-top-color: var(--background-ui-activ);
+	border-left-color: var(--background-ui-activ);
+	border-right-color: transparent;
+	transform: rotate(-45deg);
+	right: -40px;
+}
+
+@media (hover:hover){
+	#menu>.menu-item:hover{
+		box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+		color: var(--text-activ);
+		background-color: var(--background-ui-activ);
+		opacity: 1;
+	}
+}
+
+#menu>.menu-item:active,
+#menu>.menu-item.active{
 	box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+	color: var(--text-activ);
 	background-color: var(--background-ui-activ);
 }
 
 #menu>.menu-item{
-	width: 30px;
-	height: 30px;
-	margin: 0 10px;
+	width: 40px;
+	height: 40px;
+	margin: 0 5px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	cursor: pointer;
 	position: relative;
 	color: var(--text);	
+	background-color: var(--background-ui);
+	border-radius: 50%;
+	padding: 5px;
+	transition: all 0.1s linear; 
+}
+
+#menu>.menu-item::after{
+	width: auto;
+	height: auto;
+	content: attr(data-label);
+	position: absolute;
+	white-space: nowrap;	
+	padding: 5px 7px;
+	top: 45px;
+	font-size: 0.6rem;
+	border-radius: 5px;
+	background-color: var(--background-ui);
+	color: var(--text-activ);
+	display: none;
+}
+
+#menu>.menu-item.zoom,
+#menu>.menu-item.move,
+#menu>.menu-item.measure{
+	display: none;
+}
+
+@media (hover:hover){
+	#menu>.menu-item.zoom,
+	#menu>.menu-item.move,
+	#menu>.menu-item.measure{
+		display: flex;
+	}
+	#menu>.menu-item:hover::after{
+		display: block;
+	}
 }
 
 #menu>.menu-item::selection{
@@ -167,14 +242,6 @@ body{
 	transition: all 0.1s linear;
 }
 
-#menu>.menu-item:hover{
-	color: var(--text-activ);
-}
-
-#menu>.menu-item:first-child{
-	margin: 0;
-}
-
 /* Bigger area for user to click */
 #menu>.menu-item::before{
 	content: "";
@@ -183,16 +250,6 @@ body{
 	height: 40px;
 }
 
-.menu-icem>i::after{
-	content: attr(data-desc);
-	position: absolute;
-	font-size: 2rem;
-	padding: 1.2rem 1.5rem;
-	background-color: red;
-	white-space: nowrap;
-	top: 0;
-	left: 0;
-}
 /*ToolBar End*/
 
 /*Main*/
@@ -226,7 +283,7 @@ body{
 	padding: 3px 5px;
 	text-shadow: 0 1px 1px rgba(6, 6, 6, 1);
 	transition: opacity 0.15s linear;
-	top: calc(100% - 40px);
+	top: 20px;
 	opacity: 0;
 }
 
@@ -354,13 +411,24 @@ body{
 	transition: all 0.1s linear;
 }
 
-.file-selected:hover{
+.file-selected:active{
 	background-color: var(--background-ui-activ);
 	border-color: var(--border-activ);
 }
 
-.file-selected:hover>span{
+.file-selected:active>span{
 	color: var(--text-activ);
+}
+
+@media (hover:hover){
+	.file-selected:hover{
+		background-color: var(--background-ui-activ);
+		border-color: var(--border-activ);
+	}
+
+	.file-selected:hover>span{
+		color: var(--text-activ);
+	}
 }
 
 .file-selected>i{
@@ -372,9 +440,16 @@ body{
 	border: 1px solid transparent;
 }
 
-#direct-upload>.file-selected:hover{
+#direct-upload>.file-selected:active{
 	background-color: transparent;
 	border-color: var(--text);
+}
+
+@media (hover:hover){
+	#direct-upload>.file-selected:hover{
+		background-color: transparent;
+		border-color: var(--text);
+	}
 }
 
 .file-selected>svg{
@@ -405,10 +480,18 @@ body{
 	transition: all 0.1s linear;
 }
 
-#add-file>button:hover{
+#add-file>button:active{
 	background-color: var(--background-ui-activ);
 	color: var(--text-activ);
 	border-color: var(--border-activ);
+}
+
+@media (hover:hover){
+	#add-file>button:hover{
+		background-color: var(--background-ui-activ);
+		color: var(--text-activ);
+		border-color: var(--border-activ);
+	}
 }
 
 /*Image Form End*/
@@ -418,7 +501,6 @@ body{
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	/* justify-content: center; */
 	align-items: center;
 	position: absolute;
 	top: 20px;
@@ -445,7 +527,6 @@ body{
 #direct-upload{
 	width: 350px;
 	height: 250px;
-	/* border: 1px dashed #aaaaaa; */
 	border: 1px dashed silver;
 	border-radius: 5px;
 	position:absolute;
@@ -468,12 +549,38 @@ body{
 /*Responsive*/
 @media only screen and (max-width: 480px){
 	#menu{
-		width: 60px;
+		width: 100%;
 		height: 60px;
 		top: initial;
 		left: initial;
 		bottom: 10px;
-		right: 10px;
+		left: unset;
+		flex-direction: row-reverse;
+		justify-content: center;
+		transform: translateX(0);
+		transform: translateY(110%);
+	}
+
+
+	#menu::after{
+		width: 30px;
+		height: 30px;
+		right: initial;
+		top: -40px;
+		background-color: transparent;
+		border: 8px solid transparent;
+		border-top-color: var(--background-ui);
+		border-left-color: var(--background-ui);
+		transform: rotate(45deg);
+	}
+
+	#menu.active::after{
+		border-color: transparent;
+		border-bottom-color: var(--background-ui-activ);
+		border-right-color: var(--background-ui-activ);
+		transform: rotate(45deg);
+		right: initial;
+		top: -50px;
 	}
 
 	#menu>.menu-item{
