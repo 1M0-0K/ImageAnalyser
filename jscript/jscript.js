@@ -10,15 +10,21 @@
     const errorDisplay = document.querySelector("#errors");
     const fileTypes = "jpg|jpeg|png|svg|gif";
     let canWork = false;
-    let lastCursorStyle = "crosshair";
 
     //------Theme
     const toggleTheme = document.querySelector("#toggle");
     const toggleThemeCheckbox = document.querySelector("#toggle-box");
 
     //------ToolBox
+    const menu = document.querySelector("#menu");
     const buttons = document.querySelectorAll(".menu-item");
     const buttonAdd = buttons[0];
+    const buttonMove = buttons[1];
+    const buttonMeasure = buttons[2];
+    const buttonZoom = buttons[3];
+    const buttonPick = buttons[4];
+    let selectedTool = "move";
+    let lastSelectedTool;
     
     //------Workspace
     const main = document.querySelector("#main");
@@ -54,6 +60,7 @@
     let zoomToolTouchOn = false;
 
     //------Moving Tool
+    let tempMoving = false;
     let canMove = false;
     let imageX = 0;
     let imageY = 0;
@@ -84,22 +91,36 @@
 	e.preventDefault();
 	e.stopPropagation();
     }
+
+    const getCursorStyle = () =>{
+	let cursorStyle;
+	switch(selectedTool){
+	    case "move":
+		cursorStyle = "grab";
+		break;
+	    case "zoom":
+		cursorStyle = "zoom-in";
+		break;
+	    case "pick":
+		cursorStyle = "default";
+		break;
+	    case "measure":
+	    default:
+		cursorStyle = "crosshair";
+	}
+
+	return cursorStyle;
+    }
     
     const canvasInit = () => {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	// ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
     }
 
     const drawCanvas = () => {
 	
 	ctx.clearRect(0, 0, innerWidth, innerHeight);
-	// imageOffsetLeft = (window.innerWidth/2 - workImage.width/2);
-	// imageOffsetTop = (window.innerHeight/2 - workImage.height/2);
-	// let elementScale = measuredElement.getBoundingClientRect().width / measuredElement.offsetWidth;
-	// ctx.scale((zoom/100), (zoom/100));
 	ctx.drawImage(workImage, imageX, imageY, workImage.width*(zoom/100), workImage.height*(zoom/100));
-	// ctx.drawImage(workImage, 0, 0);
 	requestAnimationFrame(drawCanvas);
 
     }
@@ -201,9 +222,9 @@
 
 	//Update the style of some elements
 	dragDrop.style.display = "none";
-	// workImage.style.display = "block";
 	canvas.style.display = "block";
-	main.style.cursor = "crosshair";	
+    
+	main.style.cursor = "grab";
 
 	imageOffsetLeft = (window.innerWidth / 2 - workImage.width / 2 );
 	imageOffsetTop = Math.ceil(window.innerHeight / 2 - workImage.height / 2);
@@ -211,7 +232,7 @@
 	imageY = imageOffsetTop;
 	
 	drawCanvas();
-	//
+	
 	//Now we can use the tools
 	canWork = true;
 
@@ -241,7 +262,6 @@
 	    return;
 	}
 
-	// afterDisplay();
 
 	dragDrop.style.display = "none";
 
@@ -292,11 +312,11 @@
 	let image = null;
 
 	//Check if we have something in the clipboard
-	if(itemRaw || itemFile){
+	if(itemRaw || itemFile!== undefined){
 	    //Check what we have in the clipboard
-	    if (itemRaw.type.indexOf("image") === 0){
+	    if (itemRaw && itemRaw.type.indexOf("image") === 0){
 		image = itemRaw.getAsFile();
-	    }else if(itemFile.type.indexOf("image") === 0){
+	    }else if(itemFile && itemFile.type.indexOf("image") === 0){
 		image = itemFile; 
 	    }
 	}
@@ -389,12 +409,12 @@
 	    posY = e.touches[0].clientY;
 	}
 
-	//If the wheel or the left mouse button and alt key are pressed and we can
+	//If the wheel or the left mouse button and space bar are pressed and we can
 	//use the tool we start moving the image
-	if(e.button === 1 || (e.button === 0 && e.altKey) || (e.touches && e.touches[0])){
+	if(e.button === 1 || (e.touches && e.touches[0]) || (e.button === 0 && selectedTool === "move") || (e.button === 0 && tempMoving)){
 	    if(canWork){
-		lastCursorStyle = main.style.cursor;
-		main.style.cursor= "grabbing";
+
+		main.style.cursor = "grabbing";
 
 		imageOffsetX = posX - imageOffsetLeft;
 		imageOffsetY = posY - imageOffsetTop;
@@ -408,9 +428,14 @@
     const movingToolStop = (e) => {
 
 	//The moving stops if the wheel or the left mouse button are not pressed 
-	if(e.button === 1 || (e.button === 0) || !e.touches){
-	    if(canMove)
-		main.style.cursor = lastCursorStyle;
+	if(e.button === 1 || e.button === 0 || !e.touches){
+	    if(canMove){
+		if(tempMoving){
+		    main.style.cursor = getCursorStyle();
+		}else{
+		    main.style.cursor = "grab";
+		}
+	    }
 
 	    canMove = false;
 	}
@@ -559,6 +584,7 @@
 
 	const touchesAtOnce = e.touches;
 	if(e.touches.length === 2){
+	    mToolMouseUp()
 	    canMove = false;
 	    zoomToolTouchOn = true;
 	    prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
@@ -602,6 +628,21 @@
     }
 
 
+    //------ColorPicker Tool
+    const colorPicker = (e) => {
+	const pixel = ctx.getImageData(e.clientX, e.clientY, 1, 1).data;
+	console.log(`rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${pixel[3]})`);
+    }
+
+    const saveToClipboard = (text) => {
+	navigator.clipboard.writeText(text).then( (msg) =>
+	    sendError("Copied to clipboard")
+	).catch((err) =>
+	    sendError("Error" + err)
+	)
+    }
+
+
     //------Buttons Events
     const buttonsEvents = (e) => {
 
@@ -616,6 +657,7 @@
 		selectedImageName.textContent = "No Image";
 		selectedImageLocal.value = "";
 	    }
+	    menu.classList.toggle("active");
 	};
 
 	if(formClose.contains(_t) && e.button === 0){
@@ -629,6 +671,36 @@
 		addToStorage(0);
 	    }
 	}
+
+	if(menu === e.target){
+	    menu.classList.toggle("active");
+	}
+
+	if(buttonMove.contains(_t) && e.button === 0 && canWork){
+	    selectedTool = "move";
+	    main.style.cursor= "grab";
+	    menu.classList.toggle("active");
+	}
+
+	if(buttonMeasure.contains(_t) && e.button === 0 && canWork){
+	    selectedTool = "measure";
+	    main.style.cursor = "crosshair";	
+	    menu.classList.toggle("active");
+	}
+
+	if(buttonZoom.contains(_t) && e.button === 0 && canWork){
+	    selectedTool = "zoom";
+	    main.style.cursor = "zoom-in";
+	    menu.classList.toggle("active");
+	}
+	
+	if(buttonPick.contains(_t) && e.button === 0 && canWork){
+	    // saveToClipboard("Testing");
+	    selectedTool = "pick";
+	    main.style.cursor = "default";
+	    menu.classList.toggle("active");
+	}
+
 
     }
 
@@ -710,7 +782,7 @@
 	e.preventDefault();
 
 	//Check if we can use the tool
-	if(e.button === 0 && canWork && canMove === false && !e.altKey || e.touches){
+	if((e.button === 0 && canWork && !canMove && selectedTool === "measure") || (canWork && !canMove && e.touches)){
 	    mToolIsDrawing = true;
 
 	    mToolX2 = posX;
@@ -747,7 +819,7 @@
 	mToolY2 = posY;
 	
 	//Check if we can use the tool
-	if(mToolIsDrawing === true && canMove === false)
+	if(mToolIsDrawing === true && canMove === false && !zoomToolTouchOn)
 	    mToolDraw();
     }
 
@@ -755,13 +827,18 @@
 
     const mToolTouchDown = (e) => {
 
-	if(touchTimeout !== null){
-	    clearTimeout(touchTimeout);
-	}
-	touchCount++;
-	if(touchCount == 2 && e.touches.length < 2){
+	if(selectedTool === "measure" && zoomToolTouchOn === false){
 	    canMove = false;
 	    mToolMouseDown(e);
+	}else{
+	    if(touchTimeout !== null){
+		clearTimeout(touchTimeout);
+	    }
+	    touchCount++;
+	    if(touchCount == 2 && e.touches.length < 2){
+		canMove = false;
+		mToolMouseDown(e);
+	    }
 	}
 
     }
@@ -836,9 +913,61 @@
 	    if(formAdd.style.display === "flex"){
 		hideForm();
 	    }
+
+	    if(selectedTool !== "measure"){
+		selectedTool = "measure";
+		main.style.cursor = "crosshair";
+	    }
+	}
+
+	if(e.ctrlKey){
+	    if(selectedTool === "zoom"){
+		main.style.cursor = "zoom-out";
+	    }
+	}
+	
+	if(canWork === true){
+	    switch(e.key){
+		case " ":
+		    lastSelectedTool = selectedTool;
+
+		    tempMoving = true;
+		    main.style.cursor = "grab";
+		break;
+		case "m":
+		    selectedTool = "measure";
+		    main.style.cursor = "crosshair";
+		break;
+		case "v":
+		    selectedTool = "move";
+		    main.style.cursor = "grab";
+		break;
+		case "i":
+		    selectedTool = "pick";
+		    main.style.cursor = "default";
+		break;
+		case "z":
+		    selectedTool = "zoom";
+		    main.style.cursor = "zoom-in";
+		break;
+	    }
 	}
 
 
+
+
+    })
+
+    addEventListener("keyup",(e) => {
+	if(selectedTool === "zoom"){
+	    main.style.cursor = "zoom-in";
+	}
+
+	if(tempMoving === true){
+	    selectedTool = lastSelectedTool;
+	    main.style.cursor = getCursorStyle();
+	    tempMoving = false;
+	}
     })
 
     //Update different things after the image was updated
@@ -865,6 +994,22 @@
 
 	//Moving tool
 	movingTool(e);
+	
+	//Zoom tool
+	if(selectedTool === "zoom"){
+	    if(!tempMoving){
+		if(e.ctrlKey){
+		    zoomToolTouch(1);
+		}else{
+
+		    zoomToolTouch(-1);
+		}
+	    }
+	}
+
+	if(selectedTool === "pick" && !tempMoving){
+	    colorPicker(e);
+	}
 
 	//Measure Tool
 	mToolMouseDown(e);
@@ -902,7 +1047,6 @@
 
     })
 
-    //TODO: Refactoring
     //Add events to touch
     main.addEventListener("touchstart",(e) => {
 	e.preventDefault();
@@ -912,10 +1056,23 @@
 
 	//Measure tool
 	mToolTouchDown(e);
+	
+	//Zoom tool
+	if(selectedTool === "zoom"){
+	    if(e.ctrlKey){
+		zoomToolTouch(1);
+	    }else{
+
+		zoomToolTouch(-1);
+	    }
+	}
+
+	if(selectedTool === "pick"){
+	    colorPicker(e);
+	}
 
 	//Zoom tool
 	zoomToolTouchDown(e);
-	// mToolMouseDownTouch(e);
     },false);
 
     main.addEventListener("touchend",(e) => {
@@ -929,7 +1086,6 @@
 
 	//Zoom tool
 	zoomToolTouchUp();
-	// mToolMouseUpTouch(e);
     },false);
 
     main.addEventListener("touchcancel",(e) => {
@@ -943,7 +1099,6 @@
 
 	//Zoom tool
 	zoomToolTouchUp();
-	// mToolMouseUpTouch(e);
     },false);
 
     main.addEventListener("touchmove",(e) => {
@@ -953,11 +1108,12 @@
 	movingToolUpdate(e);
 
 	//Measure tool
-	mToolMouseMove(e);
+	if(!zoomToolTouchOn){
+	    mToolMouseMove(e);
+	}
 
 	//Zoom tool
 	zoomToolTouchMove(e);
-	// mToolMouseMoveTouch(e);
     },false);
 
     window.addEventListener("resize", () => {
