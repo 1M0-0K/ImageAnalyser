@@ -17,10 +17,10 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
 
 ## TODO
 - Add: 
-  * [ ] full touch support
-  * [ ] buttons for all tools (move, zoom, measure etc.)
-  * [ ] color picker
-  * [ ] color palette
+  * [x] full touch support
+  * [x] buttons for all tools (move, zoom, measure etc.)
+  * [x] color picker
+  * [x] color palette
 - Remove:
   * [ ] unused code
 - Fix:
