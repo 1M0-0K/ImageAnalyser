@@ -26,6 +26,15 @@
     let selectedTool = "move";
     let lastSelectedTool;
     
+    //------Color Palette
+    const colorPalette = document.querySelector("#color-palette");
+    const colorPaletteColors = document.querySelector(".color-palette-colors>.colors");
+    const colorPaletteInput = document.querySelector(".palette-input");
+    const colorPaletteSave = document.querySelector(".palette-save");
+    const colorPaletteRemove = document.querySelector(".palette-remove");
+    const colorPaletteCopy = document.querySelector(".palette-copy");
+    let colors = [];
+
     //------Workspace
     const main = document.querySelector("#main");
     const workImage = document.querySelector("#main>img");
@@ -39,7 +48,7 @@
     const selectedImageURL = document.querySelector("form#add-file input#selected-image");
     const selectedImageDD = document.querySelector("#direct-upload #image-local-dd");
     const dragDrop = document.querySelector("#direct-upload");
-    const formClose = formAdd.querySelector(".close");
+    const formClose = formAdd.querySelector("#add-file>.close");
 
     //------Touch
     const eventsDD = ["dragenter", "dragover", "dragleave", "drop"];
@@ -87,12 +96,43 @@
     
 
     //------General
+
+    //Function to prevent the default behavior of the events
     const preventDefaults = (e) => {
 	e.preventDefault();
 	e.stopPropagation();
     }
 
+    //Function to convert a dec to hex
+    const decToHex = (number) => {
+	
+	let hex;
+
+	if(number<16){
+	    hex = "0"+number.toString(16);
+	}else{
+	    hex = number.toString(16);
+	}
+
+	return hex;
+
+    }
+
+    //Function to check if a string is a hex color
+    const checkHexColor = (color) =>{
+
+	const reg = /^#[0-9a-f]{6}$/;
+	if(reg.test(color)){
+	    return true;
+	}else{
+	    return false;
+	}
+
+    }
+
+    //Function for getting the cursor style
     const getCursorStyle = () =>{
+
 	let cursorStyle;
 	switch(selectedTool){
 	    case "move":
@@ -110,13 +150,18 @@
 	}
 
 	return cursorStyle;
+
     }
     
+    //Init function for the canvas
     const canvasInit = () => {
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+
     }
 
+    //Draw the canvas
     const drawCanvas = () => {
 	
 	ctx.clearRect(0, 0, innerWidth, innerHeight);
@@ -125,6 +170,7 @@
 
     }
     
+    //Function to check the extension 
     const isImageExtension = (name) => {
 
 	//Check if the name matches one of the extensions
@@ -134,6 +180,7 @@
 
     }
 
+    //Function to send errors
     const sendError = (message) => {
 
 	//No more then 4 error message at a time 
@@ -158,20 +205,24 @@
     }
 
     //-----Local Storage
-    const addToStorage = (value) => {
+    
+    //Add items to localStorage
+    const addToStorage = (key,value) => {
 
 	//Add selected theme to local storage
-	localStorage.setItem("theme", value);
+	localStorage.setItem(key, value);
 
     }
 
-    const getFromStorage = () => {
+    //Get items from localStorage
+    const getFromStorage = (key) => {
 
 	//Get selected theme from local storage
-	return localStorage.getItem("theme");
+	return localStorage.getItem(key);
 
     }
 
+    //Theme toggle function
     const setTheme = () => {
 
 	//Set the selected theme
@@ -184,6 +235,8 @@
     }
 
     //------Upload image
+    
+    //Upload and image from local
     const addLocale = async(file) => {
 	
 	//Check if the file has one of the allowed extensions
@@ -203,6 +256,7 @@
 
     };
 
+    //Upload the image from url 
     const addURL = (url) => {
 
 	//Check if the url has one of the allowed extensions
@@ -218,6 +272,7 @@
 
     }
 
+    //Update the screen after the image was loaded
     const afterDisplay = () => {
 
 	//Update the style of some elements
@@ -226,6 +281,7 @@
     
 	main.style.cursor = "grab";
 
+	//Center the image to the screen
 	imageOffsetLeft = (window.innerWidth / 2 - workImage.width / 2 );
 	imageOffsetTop = Math.ceil(window.innerHeight / 2 - workImage.height / 2);
 	imageX = imageOffsetLeft;
@@ -241,6 +297,7 @@
 
     }
 
+    //Update the file name when the file is from local
     const updateFileName = (e) => {
     
 	const file = e.target.files[0];
@@ -254,6 +311,7 @@
 
     }
 
+    //Upload an image from the start page button
     const uploadFromDD = (e) => {
 
 	const file = e.target.files[0];
@@ -267,9 +325,12 @@
 
     }
 
+    //Update image from image form
     const uploadFromForm = async(e) => {
 
 	e.preventDefault();
+
+	// Check if is a file or an url
 	if(selectedImageLocal.files[0]){
 	    if(!addLocale(selectedImageLocal.files[0])){
 		return;
@@ -291,10 +352,14 @@
 
     }
 
+    //Hide the add image form
     const hideForm = () => {
+
 	formAdd.style.display = "none";
+
     }
 
+    //Get the image from drop down
     const getFromDD = (e) => {
 
 	let dt = e.dataTransfer;
@@ -303,7 +368,7 @@
 
     }
 
-
+    //Function for uploading an image from clipboard
     const uploadFromClip = (e) => {
 
 	//Get raw and file image
@@ -372,6 +437,7 @@
 
     }
 
+    //Function to update the guids
     const updateGuids = () => {
 
 	//Update the width and height of the guids for the current image
@@ -390,6 +456,7 @@
 
     //------Moving Tool
 
+    //Function form moving the image
     const move = (e) => {
 
 	//Update the image position
@@ -400,7 +467,10 @@
 
     } 
     
+    //Starting function for the moving tool
     const movingTool = (e) => {
+
+	//Get the cursor position for the mouse and the touch
 	let posX = e.clientX;
 	let posY = e.clientY;
 
@@ -425,9 +495,10 @@
 
     }
 
+    //Stopping the moving tool
     const movingToolStop = (e) => {
 
-	//The moving stops if the wheel or the left mouse button are not pressed 
+	//The moving stops if the wheel or the finger is lifted or the left mouse button are not pressed 
 	if(e.button === 1 || e.button === 0 || !e.touches){
 	    if(canMove){
 		if(tempMoving){
@@ -442,7 +513,10 @@
 
     }
 
+    //Moving function for the moving tool
     const movingToolUpdate = (e) => {
+	
+	//Check if touch or mouse
 	let event = e;
 	if(e.touches){
 	    event = e.touches[0];
@@ -458,6 +532,7 @@
 
     //------Zoom Tool
 
+    //Function to initializing the zoom label
     const zoomToolLabelInit = () =>{
 
 	zoomToolLabel.setAttribute("id", "zoom-tool-label");
@@ -465,6 +540,7 @@
     
     }
 
+    //Function to update the zoom label
     const zoomToolLabelUpdate = (e) => {
 	
 	if(canWork){
@@ -474,7 +550,8 @@
 
     }
 
-    const zoomTool = (e) => {//display the zoom in top right corner in a small pill like box
+    //Function for the actual zooming
+    const zoomTool = (e) => {
 
 	//Check if we cand use the tool
 	if(canWork){
@@ -490,6 +567,8 @@
 		else{
 		    if(zoom>5)zoom -= 5;
 		}
+		
+		//Center the image when zooming
 		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
 		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
 
@@ -501,6 +580,8 @@
 		else{
 		    if(zoom<1000)zoom += 5;
 		}
+
+		//Center the image when zooming
 		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
 		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
 
@@ -531,17 +612,18 @@
 
     }
 
-    const zoomToolTouch = (range) => {//display the zoom in top right corner in a small pill like box
+    //Function for the actual zooming 
+    const zoomToolTouch = (range) => {
 
 	//Check if we cand use the tool
 	if(canWork){
 
-	    //Check if wheel spins up or down
-	
+	    //Select zoom in or zoom out
 	    if(range > 0){
 		if(zoom>100)zoom-=5;
 		else if(zoom>1)zoom--;
 
+		//Center the image when zooming
 		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
 		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
 
@@ -550,6 +632,7 @@
 		if(zoom<100)zoom+=1;
 		else if(zoom<1000)zoom+=5;
 
+		//Center the image when zooming
 		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
 		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
 
@@ -580,15 +663,23 @@
 
     }
 
+    //Starting function for the zoom tool on touch
     const zoomToolTouchDown = (e) => {
 
 	const touchesAtOnce = e.touches;
+	//Check if there are 2 touch points on the screen
 	if(e.touches.length === 2){
+	    //Stop the measuring tool on touch to interfere
 	    mToolMouseUp()
+	    //Stop the moving tool
 	    canMove = false;
+	    //We are zooming now
 	    zoomToolTouchOn = true;
+
+	    //Set the previous distance 
 	    prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
 	    
+	    //Save the 2 touch points for late
 	    for(let i = 0; i < touchesAtOnce.length; i++){
 		touchPoints.push(touchesAtOnce[i]);
 	    }
@@ -596,6 +687,7 @@
 
     }
 
+    //Cleaning function for the zoom tool on touch
     const zoomToolTouchUp = () => {
 
 	if(zoomToolTouchOn){
@@ -606,20 +698,27 @@
 
     }
 
+    //Moving function for the zoom tool on touch
     const zoomToolTouchMove = (e) => {
 
 	const touchesAtOnce = e.touches;
 
+	//Work only when the tool is selected
 	if(zoomToolTouchOn){
+	    //Check if we have 2 fingers on the screen
 	    if(touchPoints.length === 2){
+		//Get the distance between the x axis of the fingers
 		let currDiff = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
 
+		//Zoom depending on the distance
 		if(currDiff > prevDifference){
 		    zoomToolTouch(-1);
 		}
 		if(currDiff < prevDifference){
 		    zoomToolTouch(1);
 		}
+
+		//Update the previous distance
 		prevDifference = currDiff;
 
 	    }
@@ -629,17 +728,102 @@
 
 
     //------ColorPicker Tool
+
+    //Color picker
     const colorPicker = (e) => {
-	const pixel = ctx.getImageData(e.clientX, e.clientY, 1, 1).data;
-	console.log(`rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${pixel[3]})`);
+	
+	//Get the cursor position for both mouse and touch
+	let posX = e.clientX;
+	let posY = e.clientY;
+
+	if(e.targetTouches){
+	    posX = e.touches[0].clientX; 
+	    posY = e.touches[0].clientY;
+	}
+
+	//Get the pixel data and convert the rgba color to hex color
+	const pixel = ctx.getImageData(posX, posY, 1, 1).data;
+	const color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
+
+	//Add the color to the palette input to make it ready to be saved
+	addColorToPaletteInput(color);
+	//Copy the color to the clipboard
+	saveToClipboard(color);
+
     }
 
+    //Save text to the clipboard
     const saveToClipboard = (text) => {
-	navigator.clipboard.writeText(text).then( (msg) =>
+
+	navigator.clipboard.writeText(text).then( () =>
 	    sendError("Copied to clipboard")
 	).catch((err) =>
 	    sendError("Error" + err)
 	)
+
+    }
+
+    //------Color Palette
+
+    //Add color to the palette input
+    const addColorToPaletteInput = (color) => {
+	colorPaletteInput.value = color;
+    }
+
+    //Get color from localStorage
+    const getColorFromStorage = () => {
+
+	let col = getFromStorage("color");
+	//Check if there are any colors saved
+	if(col){
+	    //Convert the string to an array
+	    colors = col.split(","); 
+	    if(colors.length > 0){
+		//Empty the color palette
+		colorPaletteColors.innerHTML = "";
+
+		//Iterate through the array and add colors to the palette
+		for(let i = 0; i < colors.length; i++){
+		    let colorNew = document.createElement("li");
+		    colorNew.onclick = () => addColorToPaletteInput(colors[i]);
+		    colorNew.dataset.label = colors[i];
+		    colorNew.style.backgroundColor = colors[i];
+		    colorPaletteColors.appendChild(colorNew); 
+		}
+	    }
+	}else{
+	    colorPaletteColors.innerHTML = "";
+	}
+
+    }
+
+    //Add color to localStorage
+    const addColorToStorage = (color) => {
+	
+	//Check if is a  hex color
+	if(checkHexColor(color)){
+	    //Add the new color to the array
+	    colors = [...colors, color];
+	    addToStorage("color", colors);
+	    getColorFromStorage();
+	}else{
+	    sendError("That is not a color");
+	}
+
+    }
+
+    //Remove color from localStorage
+    const removeColorFromStorage = (color) => {
+
+	//Remove the color from the array
+	colors = colors.filter(col => col != color);
+
+	//Add the new color array to localStorage
+	addToStorage("color", colors);
+
+	//Get the colors from localStoragej
+	getColorFromStorage();
+
     }
 
 
@@ -660,45 +844,85 @@
 	    menu.classList.toggle("active");
 	};
 
+	//Close the image form
 	if(formClose.contains(_t) && e.button === 0){
 	    hideForm();
 	}
 
+	//Toggle the application theme
 	if(toggleTheme.contains(_t) && e.button === 0){
 	    if(toggleThemeCheckbox.checked){
-		addToStorage(1); 
+		addToStorage("theme", 1); 
 	    }else{
-		addToStorage(0);
+		addToStorage("theme", 0);
 	    }
 	}
 
-	if(menu === e.target){
+	//Toggle the menu
+	if(menu === _t && e.button === 0){
 	    menu.classList.toggle("active");
 	}
 
+	//Choose the moving tool
 	if(buttonMove.contains(_t) && e.button === 0 && canWork){
 	    selectedTool = "move";
 	    main.style.cursor= "grab";
 	    menu.classList.toggle("active");
 	}
 
+	//Choose the measuring tool
 	if(buttonMeasure.contains(_t) && e.button === 0 && canWork){
 	    selectedTool = "measure";
 	    main.style.cursor = "crosshair";	
 	    menu.classList.toggle("active");
 	}
 
+	//Choose the zooming tool
 	if(buttonZoom.contains(_t) && e.button === 0 && canWork){
 	    selectedTool = "zoom";
 	    main.style.cursor = "zoom-in";
 	    menu.classList.toggle("active");
 	}
 	
+	//Choose the color picker tool
 	if(buttonPick.contains(_t) && e.button === 0 && canWork){
-	    // saveToClipboard("Testing");
-	    selectedTool = "pick";
+	    if(selectedTool !== "pick"){
+		lastSelectedTool = selectedTool;
+		selectedTool = "pick";
+	    }else{
+		selectedTool = lastSelectedTool;
+	    }
+	    
 	    main.style.cursor = "default";
 	    menu.classList.toggle("active");
+	}
+
+	//Toggle the color palette
+	if(colorPalette === _t && e.button === 0){
+	    colorPalette.classList.toggle("active");
+
+	    getColorFromStorage();
+	}
+
+	//Save the color to localStorage
+	if(colorPaletteSave.contains(_t) && e.button === 0){
+	    if(colorPaletteInput.value.length >= 0){
+		addColorToStorage(colorPaletteInput.value);
+	    }
+	}
+
+	//Remove the color from localStorage
+	if(colorPaletteRemove.contains(_t) && e.button === 0){
+	    if(colorPaletteInput.value.length >= 0){
+		removeColorFromStorage(colorPaletteInput.value);
+	    }
+	}
+
+	//Save the color to clipboard
+	if(colorPaletteCopy.contains(_t) && e.button === 0){
+	    if(colorPaletteInput.value.length >= 0){
+		saveToClipboard(colorPaletteInput.value);
+	    }
 	}
 
 
@@ -771,6 +995,7 @@
     }
 
     const mToolMouseDown = (e) => {
+
 	let posX = e.clientX;
 	let posY = e.clientY;
 
@@ -806,6 +1031,7 @@
     }
 
     const mToolMouseMove = (e) => {
+
 	let posX = e.clientX;
 	let posY = e.clientY;
 
@@ -819,8 +1045,10 @@
 	mToolY2 = posY;
 	
 	//Check if we can use the tool
-	if(mToolIsDrawing === true && canMove === false && !zoomToolTouchOn)
+	if(mToolIsDrawing === true && canMove === false && !zoomToolTouchOn){
 	    mToolDraw();
+	}
+
     }
 
     /* For Touch */
@@ -920,54 +1148,59 @@
 	    }
 	}
 
+
+	//Change the cursor to zoom out when the ctrl key is down
 	if(e.ctrlKey){
 	    if(selectedTool === "zoom"){
 		main.style.cursor = "zoom-out";
 	    }
 	}
 	
+	//Shortcuts for the tools
 	if(canWork === true){
 	    switch(e.key){
-		case " ":
+		case " ": //Move
 		    lastSelectedTool = selectedTool;
 
 		    tempMoving = true;
 		    main.style.cursor = "grab";
 		break;
-		case "m":
+		case "m": //Measure
 		    selectedTool = "measure";
 		    main.style.cursor = "crosshair";
 		break;
-		case "v":
+		case "v": //Move
 		    selectedTool = "move";
 		    main.style.cursor = "grab";
 		break;
-		case "i":
+		case "i": //Color picker
 		    selectedTool = "pick";
 		    main.style.cursor = "default";
 		break;
-		case "z":
+		case "z": //Zoom
 		    selectedTool = "zoom";
 		    main.style.cursor = "zoom-in";
 		break;
 	    }
 	}
 
-
-
-
     })
 
+    //Event for when the keys are up
     addEventListener("keyup",(e) => {
+
+	//Change the cursor when the ctrl in up
 	if(selectedTool === "zoom"){
 	    main.style.cursor = "zoom-in";
 	}
 
+	//Change the tools and the cursor when the space is up
 	if(tempMoving === true){
 	    selectedTool = lastSelectedTool;
 	    main.style.cursor = getCursorStyle();
 	    tempMoving = false;
 	}
+
     })
 
     //Update different things after the image was updated
@@ -979,7 +1212,9 @@
 
     //Prevent default for touch events
     eventsDD.forEach(event => {
+
 	addEventListener(event, preventDefaults, false);
+
     })
 
     addEventListener("drop",(e) => {
@@ -1007,6 +1242,7 @@
 	    }
 	}
 
+	//Color picker
 	if(selectedTool === "pick" && !tempMoving){
 	    colorPicker(e);
 	}
@@ -1018,6 +1254,7 @@
 
     //Add event for mouse up
     main.addEventListener("mouseup",(e) =>{
+
 	//Moving tool
 	movingToolStop(e);
 
@@ -1028,6 +1265,7 @@
 
     //Add event for mouse moving
     main.addEventListener("mousemove",(e) => { 
+
 	//Moving tool
 	movingToolUpdate(e);
 
@@ -1049,6 +1287,7 @@
 
     //Add events to touch
     main.addEventListener("touchstart",(e) => {
+
 	e.preventDefault();
 
 	//Moving tool
@@ -1067,15 +1306,18 @@
 	    }
 	}
 
+	//Color picker
 	if(selectedTool === "pick"){
 	    colorPicker(e);
 	}
 
 	//Zoom tool
 	zoomToolTouchDown(e);
+
     },false);
 
     main.addEventListener("touchend",(e) => {
+
 	e.preventDefault();
 	
 	//Moving tool
@@ -1086,9 +1328,11 @@
 
 	//Zoom tool
 	zoomToolTouchUp();
+
     },false);
 
     main.addEventListener("touchcancel",(e) => {
+
 	e.preventDefault();
 
 	//Moving tool 
@@ -1099,9 +1343,11 @@
 
 	//Zoom tool
 	zoomToolTouchUp();
+
     },false);
 
     main.addEventListener("touchmove",(e) => {
+
 	e.preventDefault();
 
 	//Moving tool
@@ -1114,9 +1360,11 @@
 
 	//Zoom tool
 	zoomToolTouchMove(e);
+
     },false);
 
     window.addEventListener("resize", () => {
+
 	canvasInit();
 
     })
