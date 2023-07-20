@@ -1,5 +1,5 @@
 # Image-Analyser
-A simple Progressive Web Application (PWA) for analyzing images. For now you can only measure distances between the elements of an image, zoom in and zoom out and move the image around.
+A simple Progressive Web Application (PWA) for analyzing images. You can measure distances between the elements of an image and the size of the elements, zoom in and zoom out, move the image around, pick colors and save them into a color palette.
 
 ![Application Preview](/screenshots/screenshot1.png)
 
@@ -7,6 +7,8 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
 - Measure Tool
 - Move Tool
 - Zoom In/Out
+- Color picker Tool
+- Color palette
 - Dark/Light mode
 - Drop/Paste image upload
 
@@ -24,7 +26,8 @@ A simple Progressive Web Application (PWA) for analyzing images. For now you can
 - Remove:
   * [ ] unused code
 - Fix:
-  * [ ] colors 
+  * [ ] colors/style
+  * [ ] error system
 
 ## Usage
 To use this application you need to host it on a server (localhost will do if you want to use it locally).
@@ -46,12 +49,13 @@ Here you can add images from an URL or select one from your machine by clicking 
 ![Application Preview](/screenshots/screenshot1.png)
 
 ## Tools
-At the moment there are 3 tools:
+There are 3 tools:
 
 - Measure Tool
   * Click and drag to measure distances.
 - Move Tool
-  * Press Middle mouse button or Alt and Left mouse button and move the image around.
-- Zoom
-  * Scroll to Zoom-In or Zoom-Out, press Alt to use smaller steps
-
+  * Press Middle mouse button or Space and Left mouse button and move the image around.
+- Zoom Tool
+  * Scroll to Zoom-In or Zoom-Out, press <kbd>Alt</kbd>  to use smaller steps. Hold <kbd>Ctrl</kbd> to change the zoom direction.
+- Color picker Tool
+  * Scroll to Zoom-In or Zoom-Out, press <kbd>Alt</kbd> to use smaller steps
