@@ -33,7 +33,10 @@
     const colorPaletteSave = document.querySelector(".palette-save");
     const colorPaletteRemove = document.querySelector(".palette-remove");
     const colorPaletteCopy = document.querySelector(".palette-copy");
+    const colorPreview = document.createElement("div");
     let colors = [];
+    let color;
+    let picking = false;
 
     //------Workspace
     const main = document.querySelector("#main");
@@ -678,7 +681,6 @@
 
 	    //Set the previous distance 
 	    prevDifference = Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX);
-	    
 	    //Save the 2 touch points for late
 	    for(let i = 0; i < touchesAtOnce.length; i++){
 		touchPoints.push(touchesAtOnce[i]);
@@ -689,7 +691,6 @@
 
     //Cleaning function for the zoom tool on touch
     const zoomToolTouchUp = () => {
-
 	if(zoomToolTouchOn){
 	    zoomToolTouchOn = false;
 	    touchPoints = [];
@@ -730,7 +731,7 @@
     //------ColorPicker Tool
 
     //Color picker
-    const colorPicker = (e) => {
+    const colorPickerStart = (e) => {
 	
 	//Get the cursor position for both mouse and touch
 	let posX = e.clientX;
@@ -743,8 +744,41 @@
 
 	//Get the pixel data and convert the rgba color to hex color
 	const pixel = ctx.getImageData(posX, posY, 1, 1).data;
-	const color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
+	color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
 
+	colorPreview.style.display = "flex";
+	colorPreview.style.color = color;
+	picking = true;
+
+    }
+
+    //Show the color unde the cursor
+    const colorPickerMove = (e) => {
+	//Get the cursor position for both mouse and touch
+	let posX = e.clientX;
+	let posY = e.clientY;
+
+	if(e.targetTouches){
+	    posX = e.touches[0].clientX; 
+	    posY = e.touches[0].clientY;
+	}
+
+	if(picking){
+	    //Get the pixel data and convert the rgba color to hex color
+	    const pixel = ctx.getImageData(posX, posY, 1, 1).data;
+	    color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
+
+	    colorPreview.style.color = color;
+	}
+
+    }
+
+    //Set the color in the color palette and copy the color to the clipboard
+    const colorPickerStop = () => {
+
+	picking = false;
+
+	colorPreview.style.display = "none";
 	//Add the color to the palette input to make it ready to be saved
 	addColorToPaletteInput(color);
 	//Copy the color to the clipboard
@@ -752,13 +786,21 @@
 
     }
 
+    //Initialise the color preview 
+    const colorPreviewInit = () =>{
+
+	colorPreview.setAttribute("id", "color-preview");
+	main.appendChild(colorPreview);
+    
+    }
+
     //Save text to the clipboard
     const saveToClipboard = (text) => {
 
 	navigator.clipboard.writeText(text).then( () =>
-	    sendError("Copied to clipboard")
+	    console.log("Copied to clipboard")
 	).catch((err) =>
-	    sendError("Error" + err)
+	    console.log("Error" + err)
 	)
 
     }
@@ -988,9 +1030,15 @@
 	    <span>H: ${elementScale ? Math.round(height / elementScale) : height}px</span>
 	`;
 	
-	//Update the size label position 
-	mToolSizeLabel.style.left = labelLeft + "px";
-	mToolSizeLabel.style.bottom = labelBottom + "px";
+	if(touchCount === 0){
+	    //Update the size label position 
+	    mToolSizeLabel.style.left = labelLeft + "px";
+	    mToolSizeLabel.style.bottom = labelBottom + "px";
+	}else{
+	    mToolSizeLabel.style.position = "fixed";
+	    mToolSizeLabel.style.left = "calc(50% - 32px)";
+	    mToolSizeLabel.style.bottom = "calc(100% - 60px)";
+	}
 
     }
 
@@ -1244,7 +1292,7 @@
 
 	//Color picker
 	if(selectedTool === "pick" && !tempMoving){
-	    colorPicker(e);
+	    colorPickerStart(e);
 	}
 
 	//Measure Tool
@@ -1257,6 +1305,11 @@
 
 	//Moving tool
 	movingToolStop(e);
+
+	//Color picker
+	if(selectedTool === "pick"){
+	    colorPickerStop();
+	}
 
 	//Measure tool
 	mToolMouseUp(e);
@@ -1271,6 +1324,11 @@
 
 	//Zoom label update
 	zoomToolLabelUpdate(e);
+
+	//Color picker
+	if(selectedTool === "pick" && !tempMoving){
+	    colorPickerMove(e);
+	}
 
 	//Measure tool
 	mToolMouseMove(e);
@@ -1291,10 +1349,14 @@
 	e.preventDefault();
 
 	//Moving tool
-	movingTool(e);
+	if(selectedTool === "move"){
+	    movingTool(e);
+	}
 
 	//Measure tool
-	mToolTouchDown(e);
+	if(selectedTool !== "pick"){
+	    mToolTouchDown(e);
+	}
 	
 	//Zoom tool
 	if(selectedTool === "zoom"){
@@ -1308,7 +1370,7 @@
 
 	//Color picker
 	if(selectedTool === "pick"){
-	    colorPicker(e);
+	    colorPickerStart(e);
 	}
 
 	//Zoom tool
@@ -1318,13 +1380,16 @@
 
     main.addEventListener("touchend",(e) => {
 
-	e.preventDefault();
-	
 	//Moving tool
 	movingToolStop(e);
 
 	//Measure tool
 	mToolTouchUp(e);
+
+	//ColorPicker tool
+	if(selectedTool === "pick"){
+	    colorPickerStop();
+	}
 
 	//Zoom tool
 	zoomToolTouchUp();
@@ -1339,7 +1404,12 @@
 	movingToolStop(e);
 
 	//Measure tool
-	mToolTouchUp(e);
+	if(selectedTool !== "pick"){
+	    mToolTouchUp(e);
+	}
+
+	//ColorPicker tool
+	colorPickerStop();
 
 	//Zoom tool
 	zoomToolTouchUp();
@@ -1351,11 +1421,18 @@
 	e.preventDefault();
 
 	//Moving tool
-	movingToolUpdate(e);
+	if(selectedTool === "move"){
+	    movingToolUpdate(e);
+	}
 
 	//Measure tool
 	if(!zoomToolTouchOn){
 	    mToolMouseMove(e);
+	}
+
+	//ColorPicker tool
+	if(selectedTool === "pick"){
+	    colorPickerMove(e);
 	}
 
 	//Zoom tool
@@ -1375,5 +1452,6 @@
     mToolInit();
     guids();
     zoomToolLabelInit();
+    colorPreviewInit();
 
 })(window, document);
