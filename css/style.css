@@ -185,11 +185,6 @@ body{
 	transform: translateX(1px);
 }
 
-#menu.active:active::after{
-	transform: translateX(-1px);
-	border-right: 7px solid var(--text-activ);
-}
-
 @media (hover:hover){
 
 	#menu:hover::after{
@@ -596,11 +591,6 @@ body{
 	transform: translateX(1px);
 }
 
-#color-palette.active:active::after{
-	transform: translateX(-1px);
-	border-right: 7px solid var(--text-activ);
-}
-
 @media (hover:hover){
 
 	#color-palette:hover::after{
@@ -634,10 +624,15 @@ body{
     height: 250px;
     overflow-y: scroll;
 	overflow-x: hidden;
+	scrollbar-width: none;
 	padding-right: 10px;
 	display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(auto-fill, minmax(34px,1fr));
+}
+
+.color-palette-colors>ul::-webkit-scrollbar{
+	width: 0;
 }
 
 .color-palette-colors>ul>li{
@@ -718,6 +713,36 @@ body{
 		color: var(--text-activ);
 	}
 }
+
+#color-preview{
+	width: 48px;
+	height: 48px;
+	background-color: var(--background-ui);
+	border-radius: 2px;
+	position:absolute;
+	z-index: 9999;
+	top: 53px;
+	right: 10px;
+	margin-left: -18px;
+	border: 1px solid var(--background-ui-activ);
+	display: none;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: center;
+	padding: 3px;
+	transition: all 0.1s linear;
+	box-shadow: 0 0 10px rgb(0, 0, 0, 0.3);
+}
+
+#color-preview::before{
+	content: "";
+	width: 36px;
+	height: 36px;
+	margin: 1.5px;
+	background-color: currentColor;
+	border-radius: 2px;
+}
+
 
 /*Color Palette End*/
 
@@ -802,16 +827,6 @@ body{
 		border-left: 7px solid var(--text);
 	}
 
-	#menu:active::after{
-		transform: translateX(1px);
-		border-left-color: var(--text-activ);
-	}
-
-	#menu.active:active::after{
-		transform: translateX(-1px);
-		border-left: 7px solid var(--text-activ);
-	}
-
 	#menu>.menu-item{
 		width: 50px;
 		height: 50px;
@@ -892,16 +907,6 @@ body{
 		left: -15px;
 		border-right: 5px solid transparent;
 		border-left: 7px solid var(--text);
-	}
-
-	#color-palette:active::after{
-		transform: translateX(1px);
-		border-left-color: var(--text-activ);
-	}
-
-	#color-palette.active:active::after{
-		transform: translateX(-1px);
-		border-left: 7px solid var(--text-activ);
 	}
 }
 
