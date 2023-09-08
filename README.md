@@ -49,7 +49,7 @@ Here you can add images from an URL or select one from your machine by clicking 
 ![Application Preview](/screenshots/screenshot1.png)
 
 ## Tools
-There are 3 tools:
+There are 4 tools:
 
 - Measure Tool
   * Click and drag to measure distances.
