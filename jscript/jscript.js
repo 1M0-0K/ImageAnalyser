@@ -504,7 +504,7 @@
 	//The moving stops if the wheel or the finger is lifted or the left mouse button are not pressed 
 	if(e.button === 1 || e.button === 0 || !e.touches){
 	    if(canMove){
-		if(tempMoving){
+		if(tempMoving || e.button === 1){
 		    main.style.cursor = getCursorStyle();
 		}else{
 		    main.style.cursor = "grab";
@@ -748,6 +748,7 @@
 
 	colorPreview.style.display = "flex";
 	colorPreview.style.color = color;
+	colorPreview.dataset.color = color;
 	picking = true;
 
     }
@@ -769,6 +770,7 @@
 	    color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
 
 	    colorPreview.style.color = color;
+	    colorPreview.dataset.color = color;
 	}
 
     }
@@ -1291,7 +1293,7 @@
 	}
 
 	//Color picker
-	if(selectedTool === "pick" && !tempMoving){
+	if(selectedTool === "pick" && !tempMoving && e.button === 0){
 	    colorPickerStart(e);
 	}
 
