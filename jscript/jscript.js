@@ -40,7 +40,7 @@
 
     //------Workspace
     const main = document.querySelector("#main");
-    const workImage = document.querySelector("#main>img");
+    const workImage = document.createElement("img");
     const canvas = document.querySelector("#canvas");
     const ctx = canvas.getContext("2d");
 
@@ -67,7 +67,6 @@
     //------Zooming Tool
     let zoomToolLabel= document.createElement("div"); 
     let zoom = 100;
-    let zoomTemp = zoom;
     let timer = null;
     let zoomToolTouchOn = false;
 
@@ -78,8 +77,6 @@
     let imageY = 0;
     let imageOffsetX = 0;
     let imageOffsetY = 0;
-    let imageOffsetLeft = 0;
-    let imageOffsetTop = 0;
 
 
     //------Measure Tool
@@ -159,8 +156,10 @@
     //Init function for the canvas
     const canvasInit = () => {
 
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	canvas.width = workImage.width || window.innerWidth;
+	canvas.height = workImage.height || window.innerHeight;
+	canvas.style.left = `${imageX}px`;
+	canvas.style.top = `${imageY}px`;
 
     }
 
@@ -168,8 +167,7 @@
     const drawCanvas = () => {
 	
 	ctx.clearRect(0, 0, innerWidth, innerHeight);
-	ctx.drawImage(workImage, imageX, imageY, workImage.width*(zoom/100), workImage.height*(zoom/100));
-	requestAnimationFrame(drawCanvas);
+	ctx.drawImage(workImage, 0, 0, workImage.width, workImage.height);
 
     }
     
@@ -278,6 +276,7 @@
     //Update the screen after the image was loaded
     const afterDisplay = () => {
 
+
 	//Update the style of some elements
 	dragDrop.style.display = "none";
 	canvas.style.display = "block";
@@ -285,11 +284,12 @@
 	main.style.cursor = "grab";
 
 	//Center the image to the screen
-	imageOffsetLeft = (window.innerWidth / 2 - workImage.width / 2 );
-	imageOffsetTop = Math.ceil(window.innerHeight / 2 - workImage.height / 2);
-	imageX = imageOffsetLeft;
-	imageY = imageOffsetTop;
+	canvas.style.transform = "scale(1)";
+	zoom = 100;
+	imageX = (window.innerWidth / 2 - workImage.width / 2 );
+	imageY = Math.ceil(window.innerHeight / 2 - workImage.height / 2);
 	
+	canvasInit();
 	drawCanvas();
 	
 	//Now we can use the tools
@@ -444,12 +444,12 @@
     const updateGuids = () => {
 
 	//Update the width and height of the guids for the current image
-	gVertical.style.width = Math.abs(workImage.width * zoom / 100) + "px";
-	gHorizontal.style.height = Math.abs(workImage.height * zoom /100) + "px";
+	gVertical.style.width = Math.abs(canvas.width * zoom / 100) + "px";
+	gHorizontal.style.height = Math.abs(canvas.height * zoom /100) + "px";
 
 	//Update the position of the guids for the current image
-	gVertical.style.left = imageOffsetLeft + "px";
-	gHorizontal.style.top = imageOffsetTop + "px"; 
+	gVertical.style.left = (imageX - ((canvas.getBoundingClientRect().width - canvas.width) / 2)) + "px";
+	gHorizontal.style.top = (imageY - ((canvas.getBoundingClientRect().height - canvas.height) / 2)) + "px";
 	
 	//Display the guids on the page
 	gVertical.style.display = "block";
@@ -465,8 +465,8 @@
 	//Update the image position
 	imageX = e.clientX - imageOffsetX;
 	imageY = e.clientY - imageOffsetY;
-	imageOffsetLeft = imageX;
-	imageOffsetTop = imageY;
+	canvas.style.left = `${imageX}px`;
+	canvas.style.top = `${imageY}px`;
 
     } 
     
@@ -489,8 +489,8 @@
 
 		main.style.cursor = "grabbing";
 
-		imageOffsetX = posX - imageOffsetLeft;
-		imageOffsetY = posY - imageOffsetTop;
+		imageOffsetX = posX - imageX;
+		imageOffsetY = posY - imageY;
 
 		canMove = true;
 	    }
@@ -571,10 +571,6 @@
 		    if(zoom>5)zoom -= 5;
 		}
 		
-		//Center the image when zooming
-		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
-		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
-
 	    }else if(e.deltaY < 0){
 
 		if(e.altKey){
@@ -584,16 +580,10 @@
 		    if(zoom<1000)zoom += 5;
 		}
 
-		//Center the image when zooming
-		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
-		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
-
 	    }
 	    
 	    //Update image position
-	    imageOffsetLeft = imageX;
-	    imageOffsetTop = imageY;
-	    zoomTemp = zoom;
+	    canvas.style.transform = `scale(${zoom/100})`;
 
 	    //Update magnification label
 
@@ -626,25 +616,15 @@
 		if(zoom>100)zoom-=5;
 		else if(zoom>1)zoom--;
 
-		//Center the image when zooming
-		imageX += Math.abs((workImage.width * zoom /100 - workImage.width * zoomTemp / 100 ))/2; 
-		imageY += Math.abs((workImage.height * zoom /100 - workImage.height * zoomTemp / 100 ))/2; 
-
 	    }else if(range < 0){
 
 		if(zoom<100)zoom+=1;
 		else if(zoom<1000)zoom+=5;
 
-		//Center the image when zooming
-		imageX -= (workImage.width * zoom /100 - workImage.width * zoomTemp / 100 )/2; 
-		imageY -= (workImage.height * zoom /100 - workImage.height * zoomTemp / 100 )/2; 
-
 	    }
 	    
 	    //Update image position
-	    imageOffsetLeft = imageX;
-	    imageOffsetTop = imageY;
-	    zoomTemp = zoom;
+	    canvas.style.transform = `scale(${zoom/100})`;
 
 	    //Update magnification label
 
@@ -743,7 +723,9 @@
 	}
 
 	//Get the pixel data and convert the rgba color to hex color
-	const pixel = ctx.getImageData(posX, posY, 1, 1).data;
+	let posPixelX = (posX - Math.ceil(canvas.getBoundingClientRect().x)) / (zoom / 100) - 1;
+	let posPixelY = (posY - Math.ceil(canvas.getBoundingClientRect().y)) / (zoom / 100) - 1;
+	const pixel = ctx.getImageData(Math.ceil(posPixelX), Math.ceil(posPixelY), 1, 1).data;
 	color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
 
 	colorPreview.style.display = "flex";
@@ -766,7 +748,9 @@
 
 	if(picking){
 	    //Get the pixel data and convert the rgba color to hex color
-	    const pixel = ctx.getImageData(posX, posY, 1, 1).data;
+	    let posPixelX = (posX - Math.ceil(canvas.getBoundingClientRect().x)) / (zoom / 100) - 1;
+	    let posPixelY = (posY - Math.ceil(canvas.getBoundingClientRect().y)) / (zoom / 100) - 1;
+	    const pixel = ctx.getImageData(Math.ceil(posPixelX), Math.ceil(posPixelY), 1, 1).data;
 	    color = `#${decToHex(pixel[0])}${decToHex(pixel[1])}${decToHex(pixel[2])}`;
 
 	    colorPreview.style.color = color;
@@ -799,9 +783,8 @@
     //Save text to the clipboard
     const saveToClipboard = (text) => {
 
-	navigator.clipboard.writeText(text).then( () =>
-	    console.log("Copied to clipboard")
-	).catch((err) =>
+	navigator.clipboard.writeText(text)
+	.catch((err) =>
 	    console.log("Error" + err)
 	)
 
@@ -999,7 +982,8 @@
 	    return false;
 	
 	//Find the scale for the zoom magnification
-	let elementScale = workImage.width / workImage.width*zoom/100;
+	// let elementScale = workImage.width / workImage.width*zoom/100;
+	let elementScale = canvas.width / canvas.width*zoom/100;
 
 	const width = Math.round(Math.abs(mToolX2 - mToolX1));
 	const height = Math.round(Math.abs(mToolY2 - mToolY1));
@@ -1445,12 +1429,12 @@
     window.addEventListener("resize", () => {
 
 	canvasInit();
+	drawCanvas();
 
     })
 
     //Initialize 
     setTheme();
-    canvasInit();
     mToolInit();
     guids();
     zoomToolLabelInit();
