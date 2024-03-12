@@ -1,7 +1,7 @@
 # Image-Analyser
 A simple Progressive Web Application (PWA) for analyzing images. You can measure distances between the elements of an image and the size of the elements, zoom in and zoom out, move the image around, pick colors and save them into a color palette.
 
-![Application Preview](/screenshots/screenshot1.png)
+![Application Preview](/screenshots/screenshot1.jpg)
 
 ## Key Feature
 - Measure Tool
@@ -34,19 +34,19 @@ To use this application you need to host it on a server (localhost will do if yo
 
 After you enter the app you will be welcomed by this page:
 
-![Application Welcome Screen](/screenshots/screenshot0.png)
+![Application Welcome Screen](/screenshots/screenshot0.jpg)
 
 To add a file you can drop or paste directly on the application or click the file icon in the middle of the screen to choose an image from your machine. You can also click the button in the top left corner  and a window will appear.
 
 - Light Mode
-![Application Light Mode](/screenshots/screenshot3.png)
+![Application Light Mode](/screenshots/screenshot3.jpg)
 
 - Dark Mode
-![Application Dark Mode](/screenshots/screenshot2.png)
+![Application Dark Mode](/screenshots/screenshot2.jpg)
 
 Here you can add images from an URL or select one from your machine by clicking the file icon (local image has higher priority). After selecting an image or inserting an URL press the "Display" button.
 
-![Application Preview](/screenshots/screenshot1.png)
+![Application Preview](/screenshots/screenshot1.jpg)
 
 ## Tools
 There are 4 tools:
