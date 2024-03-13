@@ -56,6 +56,6 @@ There are 4 tools:
 - Move Tool
   * Press Middle mouse button or Space and Left mouse button and move the image around.
 - Zoom Tool
-  * Scroll to Zoom-In or Zoom-Out, press <kbd>Alt</kbd>  to use smaller steps. Hold <kbd>Ctrl</kbd> to change the zoom direction.
+  * Scroll to Zoom-In or Zoom-Out, press <kbd>Alt</kbd>  to use smaller steps. 
 - Color picker Tool
-  * Scroll to Zoom-In or Zoom-Out, press <kbd>Alt</kbd> to use smaller steps
+  * Pick color from image and store them in the color palette.
