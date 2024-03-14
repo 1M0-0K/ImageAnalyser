@@ -1376,7 +1376,7 @@
   } , false);
 
   //Add event for mouse out
-  main.addEventListener("mouseout",(e) =>{
+  main.addEventListener("mouseleave",(e) =>{
 
     //Moving tool
     movingToolStop(e);
