@@ -650,17 +650,17 @@
 
         if(zoom>100){
           zoom-=5;
-          zoomRatio = 1 - (zoom / (zoom + 1));
+          zoomRatio = 1 - (zoom / (zoom + 5));
         }
         else if(zoom>1){
           zoom--;
-          zoomRatio = 1 - (zoom / (zoom + 5));
+          zoomRatio = 1 - (zoom / (zoom + 1));
         }
 
       }else if(range < 0){
 
         if(zoom<100){
-          zoom+=1;
+          zoom++;
           zoomRatio = 1 - (zoom / (zoom - 1));
         }
         else if(zoom<1000){
@@ -747,8 +747,8 @@
         //Get the distance between the fingers
         let currDiff = Math.abs(Math.sqrt(Math.pow(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX, 2) + Math.pow(touchesAtOnce[0].clientY  - touchesAtOnce[1].clientY, 2)));
 
-        let midX = (touchesAtOnce[0].clientX  + touchesAtOnce[1].clientX) /2;
-        let midY = (touchesAtOnce[0].clientY  + touchesAtOnce[1].clientY) / 2;
+        let midX = Math.min(touchesAtOnce[0].clientX, touchesAtOnce[1].clientX) + Math.abs(touchesAtOnce[0].clientX  - touchesAtOnce[1].clientX) /2;
+        let midY = Math.min(touchesAtOnce[0].clientY, touchesAtOnce[1].clientY) + Math.abs(touchesAtOnce[0].clientY  - touchesAtOnce[1].clientY) / 2;
 
         //Zoom depending on the distance
         if(currDiff > prevDifference + 1){
